@@ -1,0 +1,15 @@
+<div>
+    <p>
+        Number of extra VM provisioning tries after the first failure, before failing any
+        build whose assigned label is satisfied by this template's labels.
+    </p>
+    <ul>
+        <li><code>1</code> (default) — retry once, then cancel queued builds (2 attempts total).</li>
+        <li><code>0</code> — no retries; fail the build after the first provisioning failure.</li>
+        <li><code>-1</code> — unlimited retries (not recommended).</li>
+    </ul>
+    <p>
+        The counter resets when an agent for this label comes online successfully.
+        Each failed launch (provisioning timeout, SSH failure, etc.) counts as one attempt.
+    </p>
+</div>

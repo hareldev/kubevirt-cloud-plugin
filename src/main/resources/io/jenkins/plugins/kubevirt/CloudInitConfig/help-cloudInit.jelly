@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+The MIT License
+
+Copyright (c) Red Hat, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core">
+<div>
+    <p>
+        This is a <a href="https://cloudinit.readthedocs.io/" target="_blank">cloud-init</a> 
+        configuration file in YAML format. It will be injected into the VM at boot time 
+        via KubeVirt's <code>cloudInitNoCloud</code> mechanism.
+        The data is stored as a Kubernetes Secret and referenced by the VM,
+        so there is no size limit on the cloud-init content.
+    </p>
+    
+    <p><strong>Important:</strong> The VM image must have cloud-init installed and enabled.</p>
+    
+    <h3>SSH Key Injection</h3>
+    <p>
+        To enable SSH access, include your SSH public key in the cloud-init config.
+        The public key should correspond to the private key configured in Jenkins SSH credentials.
+    </p>
+    
+    <h4>Example: Create a jenkins user with SSH key</h4>
+    <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px;">
+#cloud-config
+# Stop sshd early to prevent premature agent connection.
+# bootcmd runs BEFORE user creation, package installation, and runcmd.
+bootcmd:
+  - systemctl stop sshd || true
+  - systemctl disable sshd || true
+
+users:
+  - name: jenkins
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAA... your-public-key
+
+# Ensure SSH daemon is running (keep as the LAST runcmd entry)
+runcmd:
+  - systemctl enable sshd
+  - systemctl start sshd
+    </pre>
+    
+    <h4>Example: Configure existing default user (e.g., cloud-user, fedora)</h4>
+    <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px;">
+#cloud-config
+ssh_authorized_keys:
+  - ssh-rsa AAAAB3NzaC1yc2EAAA... your-public-key
+    </pre>
+    
+    <h4>Example: Install packages on first boot</h4>
+    <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px;">
+#cloud-config
+# Stop sshd early to prevent premature agent connection.
+# bootcmd runs BEFORE user creation, package installation, and runcmd.
+bootcmd:
+  - systemctl stop sshd || true
+  - systemctl disable sshd || true
+
+users:
+  - name: jenkins
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAA... your-public-key
+
+packages:
+  - java-17-openjdk-headless
+  - git
+
+# Ensure SSH daemon is running (keep as the LAST runcmd entry)
+runcmd:
+  - systemctl enable sshd
+  - systemctl start sshd
+    </pre>
+    
+    <h3>Tips</h3>
+    <ul>
+        <li>The file must start with <code>#cloud-config</code></li>
+        <li>Use YAML syntax - indentation matters (use spaces, not tabs)</li>
+        <li>The SSH public key is safe to include - it's meant to be public</li>
+        <li>Ensure the username matches the SSH credentials configured in the VM template</li>
+        <li>Use <code>bootcmd</code> to stop sshd early and <code>runcmd</code> to start it last — this prevents
+            the Jenkins agent from connecting before cloud-init finishes installing packages and configuring the VM</li>
+        <li>For <strong>Direct SSH</strong> connection type: ensure <code>qemu-guest-agent</code> is installed for IP detection</li>
+        <li>For <strong>virtctl SSH</strong> connection type: <code>qemu-guest-agent</code> is not required (connects via Kubernetes API)</li>
+    </ul>
+    
+    <h3>Common VM Image Default Users</h3>
+    <ul>
+        <li><strong>RHEL/CentOS:</strong> cloud-user</li>
+        <li><strong>Fedora:</strong> fedora</li>
+        <li><strong>Ubuntu:</strong> ubuntu</li>
+        <li><strong>Debian:</strong> debian</li>
+    </ul>
+    
+    <p>
+        <a href="https://cloudinit.readthedocs.io/en/latest/reference/examples.html" target="_blank">
+            More cloud-init examples →
+        </a>
+    </p>
+</div>
+</j:jelly>

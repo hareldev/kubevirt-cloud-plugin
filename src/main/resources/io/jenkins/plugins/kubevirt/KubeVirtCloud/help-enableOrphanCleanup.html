@@ -1,0 +1,35 @@
+<div>
+    <p>
+        When enabled, a background task runs periodically (every hour) to detect and clean up
+        orphaned VMs - virtual machines that exist in Kubernetes but have no corresponding
+        registered agent in Jenkins.
+    </p>
+    <p>
+        <strong>Why orphaned VMs occur:</strong>
+    </p>
+    <ul>
+        <li>Agent registration failed after VM creation</li>
+        <li>Jenkins crashed or restarted during provisioning</li>
+        <li>Network issues prevented proper cleanup</li>
+        <li>The agent termination callback failed to delete the VM</li>
+    </ul>
+    <p>
+        <strong>How it works:</strong>
+    </p>
+    <ul>
+        <li>Compares VMs in Kubernetes (by cloud label) against registered Jenkins agents</li>
+        <li>Uses each template's "Orphan Grace Period" to avoid deleting VMs still starting up</li>
+        <li>Only deletes VMs that have no agent and are older than the grace period</li>
+    </ul>
+    <p>
+        <strong>When to disable:</strong>
+    </p>
+    <ul>
+        <li>If you manage VM lifecycle externally</li>
+        <li>If you have VMs with the plugin's labels that should not be auto-deleted</li>
+        <li>For debugging provisioning issues (to prevent VMs from being cleaned up)</li>
+    </ul>
+    <p>
+        <strong>Default:</strong> Enabled
+    </p>
+</div>

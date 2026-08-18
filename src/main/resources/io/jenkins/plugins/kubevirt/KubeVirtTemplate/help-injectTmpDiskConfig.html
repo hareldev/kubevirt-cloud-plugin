@@ -1,0 +1,63 @@
+<div>
+    <p>
+        When enabled (default), a <strong>10Gi ephemeral disk</strong> will be attached to the VM and mounted at 
+        <code>/tmp</code> via cloud-init. This provides faster temporary storage for build operations.
+    </p>
+
+    <h3>What this does:</h3>
+    <ul>
+        <li>Attaches an <code>emptyDisk</code> volume (10Gi) as a third disk to the VM</li>
+        <li>Injects cloud-init <code>runcmd</code> commands to format and mount it at <code>/tmp</code></li>
+        <li>The disk is ephemeral - data is lost when the VM is deleted</li>
+    </ul>
+
+    <h3>When to enable:</h3>
+    <ul>
+        <li>Builds that create many temporary files</li>
+        <li>VMs where the root disk has limited space or slower storage</li>
+        <li>Workloads that benefit from dedicated /tmp performance</li>
+    </ul>
+
+    <h3>When to disable:</h3>
+    <ul>
+        <li>In case you changed the default Free Space Threshold in Node Monitors, as agents might be marked offline</li>
+        <li>Simple builds with minimal temp file usage</li>
+        <li>VMs that already have adequate /tmp space on the root disk</li>
+        <li>When you want full control of cloud-init configuration</li>
+    </ul>
+
+    <h3>Cloud-Init Code Injected:</h3>
+    <p>The following <code>runcmd</code> script will be automatically added to your cloud-init configuration:</p>
+
+    <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px;">
+runcmd:
+  - |
+    TMP_DISK=/dev/vdc
+    if [ -b "$TMP_DISK" ]; then
+      # Create filesystem if not already present
+      if ! blkid "$TMP_DISK" | grep -q ext4; then
+        mkfs.ext4 -F "$TMP_DISK"
+      fi
+      # Create mount point and mount
+      mkdir -p /mnt/tmp
+      mount "$TMP_DISK" /mnt/tmp
+      # Move existing /tmp contents and remount
+      rsync -a /tmp/ /mnt/tmp/ 2&gt;/dev/null || true
+      umount /mnt/tmp
+      mount "$TMP_DISK" /tmp
+      chmod 1777 /tmp
+      echo 'Successfully mounted /tmp disk'
+    else
+      echo 'Warning: /tmp disk not found at $TMP_DISK'
+    fi
+    </pre>
+
+    <h3>Notes:</h3>
+    <ul>
+        <li>The disk appears as <code>/dev/vdc</code> (after rootdisk and cloudinit disks)</li>
+        <li>If you already have a <code>runcmd:</code> section in your cloud-init, this script will be prepended to it</li>
+        <li>The script safely handles existing /tmp contents by copying them to the new mount</li>
+        <li>The <code>chmod 1777</code> ensures proper sticky bit permissions for /tmp</li>
+    </ul>
+</div>
+

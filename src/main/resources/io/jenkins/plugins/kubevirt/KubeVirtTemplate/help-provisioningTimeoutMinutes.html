@@ -1,0 +1,29 @@
+<div>
+    <p>
+        Maximum time (in minutes) to wait for the VM to become ready and obtain an IP address.
+    </p>
+    <p>
+        This timeout covers the entire VM provisioning process, including:
+    </p>
+    <ul>
+        <li>DataVolume cloning/import from the source disk</li>
+        <li>VM scheduling and starting</li>
+        <li>Guest agent startup and IP address assignment</li>
+    </ul>
+    <p>
+        <strong>Default:</strong> 15 minutes
+    </p>
+    <p>
+        <strong>When to increase:</strong>
+    </p>
+    <ul>
+        <li>If disk cloning takes longer due to large disk sizes</li>
+        <li>If storage performance is slow</li>
+        <li>If the network/DHCP takes longer to assign an IP</li>
+        <li>If the guest agent takes time to start</li>
+    </ul>
+    <p>
+        <strong>Note:</strong> If provisioning consistently times out, check the diagnostic messages
+        in the Jenkins log for specific issues (storage problems, missing guest agent, etc.).
+    </p>
+</div>

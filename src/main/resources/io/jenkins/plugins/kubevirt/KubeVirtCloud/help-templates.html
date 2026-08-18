@@ -1,0 +1,16 @@
+<div>
+    <p>
+        Define one or more VM templates for Jenkins agents. Each template specifies:
+    </p>
+    <ul>
+        <li>The VM image and resources (CPU, memory)</li>
+        <li>Labels to match jobs to specific agent types</li>
+        <li>SSH connection settings for Jenkins to connect to the agent</li>
+        <li>Cloud-init configuration for VM initialization</li>
+    </ul>
+    <p>
+        When a job requests an agent with matching labels, a new VM will be provisioned 
+        from the appropriate template.
+    </p>
+</div>
+

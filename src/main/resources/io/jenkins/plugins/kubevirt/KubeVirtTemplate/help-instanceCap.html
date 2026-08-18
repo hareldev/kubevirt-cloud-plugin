@@ -1,0 +1,27 @@
+<div>
+    <p>
+        Maximum number of concurrent VMs that can be provisioned for this specific template.
+        This is a per-template limit that restricts how many agents can run from this template simultaneously.
+    </p>
+    <p>
+        <strong>Special Values:</strong>
+    </p>
+    <ul>
+        <li><code>0</code> - Unlimited. No per-template cap is enforced.</li>
+        <li><code>10</code> (default) - Up to 10 VMs can run simultaneously for this template.</li>
+    </ul>
+    <p>
+        <strong>Behavior:</strong>
+    </p>
+    <ul>
+        <li>When the limit is reached, new builds requiring this template will wait in the Jenkins queue.</li>
+        <li>Both the global VM Count Cap and per-template Instance Cap must be satisfied for a VM to be provisioned.</li>
+        <li>Running and provisioning VMs are counted toward this limit.</li>
+    </ul>
+    <p>
+        <strong>Examples:</strong> <code>0</code>, <code>1</code>, <code>5</code>, <code>10</code>, <code>20</code>
+    </p>
+    <p>
+        <strong>Default:</strong> <code>10</code>
+    </p>
+</div>

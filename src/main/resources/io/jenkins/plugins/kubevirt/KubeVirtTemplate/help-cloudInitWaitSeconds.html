@@ -1,0 +1,26 @@
+<div>
+    <p>
+        Maximum time (in seconds) to wait for cloud-init to complete SSH setup before Jenkins
+        attempts to connect to the VM.
+    </p>
+    <p>
+        This applies to <strong>virtctl SSH</strong> connection type only. The plugin polls the
+        SSH port through the Kubernetes API tunnel until sshd responds or this timeout is reached.
+    </p>
+    <p>
+        <strong>Default:</strong> 180 seconds (3 minutes)
+    </p>
+    <p>
+        <strong>When to increase:</strong>
+    </p>
+    <ul>
+        <li>Cloud-init installs many packages on first boot</li>
+        <li>Your cloud-init <code>runcmd</code> scripts take a long time to complete</li>
+        <li>You delay starting sshd until late in the cloud-init process</li>
+    </ul>
+    <p>
+        <strong>Tip:</strong> Rather than adding a long <code>sleep</code> in cloud-init, use
+        <code>bootcmd</code> to stop sshd early and start it as the last <code>runcmd</code> entry.
+        Increase this timeout only if cloud-init genuinely needs more time to finish setup.
+    </p>
+</div>

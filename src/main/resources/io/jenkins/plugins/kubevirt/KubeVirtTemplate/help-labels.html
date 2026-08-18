@@ -1,0 +1,16 @@
+<div>
+    <p>
+        Space-separated list of labels that jobs can use to request agents from this template.
+    </p>
+    <p>
+        When a Jenkins job specifies an agent label (e.g., in a pipeline's <code>agent { label 'xxx' }</code>), 
+        the cloud will provision a VM from a template with matching labels.
+    </p>
+    <p>
+        <strong>Example:</strong> <code>linux fedora build</code>
+    </p>
+    <p>
+        A job requesting <code>agent { label 'fedora' }</code> would match this template.
+    </p>
+</div>
+

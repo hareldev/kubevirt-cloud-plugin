@@ -1,0 +1,26 @@
+<div>
+    <p>
+        <strong>Reserved Memory</strong> - The guaranteed memory allocation for the VM.
+    </p>
+    <p>
+        This is the minimum memory that will be reserved for the VM. Kubernetes guarantees 
+        this amount will always be available to the VM.
+    </p>
+    <p>
+        Use Kubernetes quantity format with suffixes like <code>Gi</code> (gibibytes) or 
+        <code>Mi</code> (mebibytes).
+    </p>
+    <p>
+        <strong>Examples:</strong> <code>2Gi</code>, <code>4Gi</code>, <code>8Gi</code>, <code>512Mi</code>
+    </p>
+    <p>
+        <strong>Default:</strong> <code>2Gi</code>
+    </p>
+    <p>
+        <strong>Tip:</strong> Java-based builds typically need at least 2Gi. 
+        Large Maven/Gradle projects may need 4Gi or more.
+    </p>
+    <p>
+        <strong>Note:</strong> Reserved Memory must be less than or equal to Memory Limit (if set).
+    </p>
+</div>

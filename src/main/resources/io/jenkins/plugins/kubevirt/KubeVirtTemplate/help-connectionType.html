@@ -1,0 +1,17 @@
+<div>
+    <p>
+        Select how Jenkins connects to the VM agent:
+    </p>
+    <ul>
+        <li>
+            <strong>virtctl port-forward:</strong> Uses the Kubernetes API to create 
+            a port-forward tunnel to the VM. Works in any environment without requiring the VM 
+            to have a routable IP address. Recommended for most setups.
+        </li>
+        <li>
+            <strong>Direct SSH:</strong> Connects directly to the VM's IP address via SSH. 
+            Requires the VM to have a routable IP address accessible from the Jenkins controller.
+            May require additional network configuration (e.g., NodePort, LoadBalancer, or SDN routing).
+        </li>
+    </ul>
+</div>

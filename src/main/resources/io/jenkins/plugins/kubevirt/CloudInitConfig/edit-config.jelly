@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+The MIT License
+
+Copyright (c) Red Hat, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+<!--
+    Edit configuration page for KubeVirt Cloud-Init config files.
+    Displayed when creating or editing a cloud-init config in Manage Jenkins → Managed Files.
+-->
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form">
+
+    <j:set var="descriptor" value="${config.descriptor}"/>
+    <st:include page="id-name-and-comment" class="${descriptor.clazz}"/>
+
+    <f:entry title="${%Content}" help="${descriptor.getHelpFile('cloudInit')}">
+        <f:textarea id="config.content" name="config.content" value="${config.content}"
+                    style="height: 400px; font-family: monospace;"/>
+    </f:entry>
+
+    <f:entry>
+        <j:set var="usages" value="${descriptor.usages(config.id)}"/>
+        <j:choose>
+            <j:when test="${!usages.isEmpty()}">
+                <b>VM Templates using this cloud-init config:</b>
+                <ul>
+                    <j:forEach var="usage" items="${usages}">
+                        <li>${usage}</li>
+                    </j:forEach>
+                </ul>
+            </j:when>
+            <j:otherwise>
+                <i>This cloud-init config is not used by any VM templates yet.</i>
+            </j:otherwise>
+        </j:choose>
+    </f:entry>
+
+</j:jelly>

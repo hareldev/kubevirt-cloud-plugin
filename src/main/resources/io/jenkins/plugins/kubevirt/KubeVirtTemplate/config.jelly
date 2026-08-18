@@ -1,0 +1,259 @@
+<!--
+The MIT License
+
+Copyright (c) Red Hat, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <!-- Hidden ID field to preserve template identity during edits -->
+    <f:invisibleEntry>
+        <input type="hidden" name="_.id" value="${instance.id}"/>
+    </f:invisibleEntry>
+
+    <f:entry title="Template Name" field="name">
+        <f:textbox />
+    </f:entry>
+    <f:entry title="Labels" field="labels">
+        <f:textbox />
+    </f:entry>
+
+    <f:entry title="Disk Source Type" field="diskSourceType"
+             description="ContainerDisk: imports a container disk image directly into a DataVolume for each VM. DataSource (Clone): clones from a pre-existing DataSource in the cluster. DataSource (Import): imports a container image into a DataSource (cached), then clones from it for each VM — faster provisioning after the first import.">
+        <f:select />
+    </f:entry>
+
+    <!-- Disk source fields — all inside one bordered container -->
+    <div class="disk-source-options">
+        <!-- DataSource Namespace + Name: shown for dataSource and dataSourceImport -->
+        <div class="data-source-fields">
+            <f:entry title="DataSource Namespace" field="dataSourceNamespace"
+                     description="Kubernetes namespace where the DataSource resides (for Clone) or will be created (for Import).">
+                <f:textbox default="${descriptor.defaultDataSourceNamespace}" />
+            </f:entry>
+            <f:entry title="DataSource Name" field="dataSourceName"
+                     description="Name of the DataSource to clone from (for Clone) or to create (for Import).">
+                <f:textbox />
+            </f:entry>
+        </div>
+        <!-- Image: shown for containerDisk and dataSourceImport -->
+        <div class="image-field">
+            <f:entry title="Image" field="image"
+                     description="Container disk image URL (e.g., quay.io/containerdisks/fedora:40). For ContainerDisk, imported directly into a DataVolume per VM. For DataSource (Import), imported once into a DataSource and cached for subsequent VMs.">
+                <f:textbox />
+            </f:entry>
+        </div>
+    </div>
+
+    <f:entry title="Disk Size" field="diskSize">
+        <f:textbox default="${descriptor.defaultDiskSize}" />
+    </f:entry>
+
+    <f:entry title="Access Mode" field="accessMode"
+             description="RWX enables live migration but requires compatible storage. Use RWO if your storage doesn't support RWX.">
+        <f:select />
+    </f:entry>
+
+    <style>
+        .disk-source-options {
+            margin-left: 30px;
+            padding-left: 15px;
+            border-left: 2px solid #ccc;
+        }
+        .resource-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .resource-column {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .resource-column h4 {
+            margin: 0 0 10px 0;
+            color: #555;
+            font-size: 13px;
+        }
+    </style>
+
+    <f:section title="Resources">
+        <f:description>
+            Configure CPU and Memory allocation. Reserved values are guaranteed to the VM, while Limits cap the maximum.
+            Reserved must be less than or equal to Limits.
+        </f:description>
+        <div class="resource-grid">
+            <div class="resource-column">
+                <h4>Reserved (Requests)</h4>
+                <f:entry title="CPU" field="cpu">
+                    <f:textbox default="${descriptor.defaultCpu}" />
+                </f:entry>
+                <f:entry title="Memory" field="memory">
+                    <f:textbox default="${descriptor.defaultMemory}" />
+                </f:entry>
+            </div>
+            <div class="resource-column">
+                <h4>Limits (Maximum)</h4>
+                <f:entry title="CPU Limit" field="cpuLimit">
+                    <f:textbox />
+                </f:entry>
+                <f:entry title="Memory Limit" field="memoryLimit">
+                    <f:textbox />
+                </f:entry>
+            </div>
+        </div>
+    </f:section>
+    
+    <f:section title="Cloud-Init Configuration">
+        <f:entry title="Cloud-Init Config" field="cloudInitId"
+                 description="Select a cloud-init configuration for SSH key injection and VM setup. Manage configs in: Manage Jenkins → Managed Files">
+            <f:select />
+        </f:entry>
+        <f:entry title="Add /tmp mount" field="injectTmpDiskConfig">
+            <f:checkbox default="${descriptor.defaultInjectTmpDisk}" />
+        </f:entry>
+        <f:entry title="Cloud-Init Wait (seconds)" field="cloudInitWaitSeconds"
+                 description="Maximum time to wait for cloud-init to finish SSH setup before connecting (virtctl SSH only). Increase if cloud-init installs packages or runs long runcmd scripts.">
+            <f:textbox default="${descriptor.defaultCloudInitWaitSeconds}" />
+        </f:entry>
+    </f:section>
+    
+    <f:section title="SSH Connection Settings">
+        <f:entry title="Connection Type" field="connectionType"
+                 description="How Jenkins connects to the VM">
+            <f:select />
+        </f:entry>
+        <f:entry title="SSH Credentials" field="sshCredentialsId" 
+                 description="SSH credentials (username/password or SSH key) to connect to the VM">
+            <f:select />
+        </f:entry>
+        <f:entry title="SSH Port" field="sshPort"
+                 description="SSH port on the VM (used for Direct SSH only, virtctl always uses port 22)">
+            <f:textbox default="${descriptor.defaultSshPort}" />
+        </f:entry>
+        <f:entry title="Remote FS Root" field="remoteFS" 
+                 description="Directory on the VM where Jenkins agent will run">
+            <f:textbox default="${descriptor.defaultRemoteFS}" />
+        </f:entry>
+        <f:entry title="Java Path" field="javaPath" 
+                 description="Optional: Path to java executable on the VM (leave empty to use PATH)">
+            <f:textbox />
+        </f:entry>
+    </f:section>
+    
+    <f:section title="Agent Retention">
+        <f:entry title="Instance Cap" field="instanceCap">
+            <f:textbox default="${descriptor.defaultInstanceCap}" />
+        </f:entry>
+        <f:entry title="Idle Minutes" field="idleMinutes"
+                 description="How long (in minutes) the VM stays alive after becoming idle. Set to 0 to dispose immediately after the first build.">
+            <f:textbox default="${descriptor.defaultIdleMinutes}" />
+        </f:entry>
+        <f:entry title="Orphan Grace Period (minutes)" field="orphanGracePeriodMinutes"
+                 description="How long a VM must exist without a registered agent before being considered orphaned and cleaned up.">
+            <f:textbox default="${descriptor.defaultOrphanGracePeriodMinutes}" />
+        </f:entry>
+    </f:section>
+
+    <f:section title="VM Provisioning">
+        <f:entry title="Provisioning Timeout (minutes)" field="provisioningTimeoutMinutes"
+                 description="Maximum time to wait for the VM to be ready and get an IP address. Increase if disk cloning takes longer.">
+            <f:textbox default="${descriptor.defaultProvisioningTimeoutMinutes}" />
+        </f:entry>
+        <f:entry title="Max Provision Attempts" field="maxProvisionAttempts"
+                 description="Number of extra VM provisioning tries after the first failure before cancelling builds whose assigned label is satisfied by this template. 0 = no retries, 1 = one retry (default), -1 = unlimited (not recommended).">
+            <f:textbox default="${descriptor.defaultMaxProvisionAttempts}" />
+        </f:entry>
+    </f:section>
+
+    <script>
+        (function() {
+            // Get reference to this script's location in the DOM
+            var scriptElement = document.currentScript;
+            
+            function updateVisibility(select) {
+                // Find the container that holds both the select and the settings divs
+                var container = select.closest('.repeated-chunk') || 
+                               select.closest('.jenkins-section') ||
+                               select.closest('form') ||
+                               document.body;
+                
+                var dataSourceFields = container.querySelector('.data-source-fields');
+                var imageField = container.querySelector('.image-field');
+                var value = select.value;
+                
+                // If select has no value yet (not populated), default to showing containerDisk
+                // since that's the first option and the default in the Java code
+                if (!value &amp;&amp; select.options.length === 0) {
+                    value = 'containerDisk';
+                }
+                
+                if (dataSourceFields) {
+                    dataSourceFields.style.display = (value === 'dataSource' || value === 'dataSourceImport') ? '' : 'none';
+                }
+                if (imageField) {
+                    imageField.style.display = (value === 'containerDisk' || value === 'dataSourceImport' || value === '') ? '' : 'none';
+                }
+            }
+            
+            function initializeSelect(select) {
+                // Avoid double-initialization of event handlers
+                if (select.dataset.diskSourceInitialized) {
+                    // But still update visibility in case options are now populated
+                    updateVisibility(select);
+                    return;
+                }
+                select.dataset.diskSourceInitialized = 'true';
+                
+                updateVisibility(select);
+                select.addEventListener('change', function() {
+                    updateVisibility(select);
+                });
+                
+                // Watch for options being populated (Jenkins fills selects asynchronously)
+                var observer = new MutationObserver(function(mutations) {
+                    updateVisibility(select);
+                    // Once we have options, we can stop observing
+                    if (select.options.length > 0) {
+                        observer.disconnect();
+                    }
+                });
+                observer.observe(select, { childList: true, subtree: true });
+            }
+            
+            // Initialize on page load with a small delay to ensure DOM is ready
+            setTimeout(function() {
+                var container = scriptElement.closest('.repeated-chunk') || 
+                               scriptElement.closest('.jenkins-section') ||
+                               scriptElement.closest('form') ||
+                               document.body;
+                var selects = container.querySelectorAll('select[name$="diskSourceType"]');
+                selects.forEach(initializeSelect);
+            }, 100);
+            
+            // Handle dynamically added templates using Jenkins' Behaviour system
+            if (window.Behaviour) {
+                Behaviour.specify('select[name$="diskSourceType"]', 'diskSourceTypeToggle', 0, function(select) {
+                    initializeSelect(select);
+                });
+            }
+        })();
+    </script>
+</j:jelly>

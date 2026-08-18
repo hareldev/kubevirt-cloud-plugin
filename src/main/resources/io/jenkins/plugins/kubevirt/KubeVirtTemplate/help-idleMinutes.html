@@ -1,0 +1,27 @@
+<div>
+    <p>
+        The number of minutes the VM agent will remain idle before being automatically terminated.
+        The idle timer resets each time a new build starts on this agent.
+    </p>
+    <p>
+        <strong>Special Values:</strong>
+    </p>
+    <ul>
+        <li><code>0</code> - The VM will be disposed immediately after the first build completes (single-use agent).</li>
+        <li><code>10</code> (default) - The VM stays alive for 10 minutes after becoming idle, allowing it to be reused for subsequent builds.</li>
+    </ul>
+    <p>
+        <strong>Recommendations:</strong>
+    </p>
+    <ul>
+        <li>Use <code>0</code> for builds that require a clean environment each time or to minimize resource usage.</li>
+        <li>Use a higher value (e.g., <code>30</code> or <code>60</code>) if you have frequent builds that can reuse the same VM to avoid repeated provisioning overhead.</li>
+    </ul>
+    <p>
+        <strong>Examples:</strong> <code>0</code>, <code>5</code>, <code>10</code>, <code>30</code>, <code>60</code>
+    </p>
+    <p>
+        <strong>Default:</strong> <code>10</code>
+    </p>
+</div>
+

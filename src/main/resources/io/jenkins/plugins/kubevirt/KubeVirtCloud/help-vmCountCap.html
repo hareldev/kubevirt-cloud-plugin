@@ -1,0 +1,27 @@
+<div>
+    <p>
+        Maximum number of concurrent VMs that can be provisioned across all templates in this cloud.
+        This is a global limit that applies to the entire cloud configuration.
+    </p>
+    <p>
+        <strong>Special Values:</strong>
+    </p>
+    <ul>
+        <li><code>0</code> - Unlimited. No global cap is enforced.</li>
+        <li><code>10</code> (default) - Up to 10 VMs can run simultaneously across all templates.</li>
+    </ul>
+    <p>
+        <strong>Behavior:</strong>
+    </p>
+    <ul>
+        <li>When the limit is reached, new builds will wait in the Jenkins queue until a VM becomes available.</li>
+        <li>Both the global VM Count Cap and per-template Instance Cap must be satisfied for a VM to be provisioned.</li>
+        <li>Running and provisioning VMs are counted toward this limit.</li>
+    </ul>
+    <p>
+        <strong>Examples:</strong> <code>0</code>, <code>5</code>, <code>10</code>, <code>20</code>
+    </p>
+    <p>
+        <strong>Default:</strong> <code>10</code>
+    </p>
+</div>

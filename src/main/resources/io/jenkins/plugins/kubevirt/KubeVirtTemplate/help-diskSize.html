@@ -1,0 +1,21 @@
+<div>
+    <p>
+        The size of the VM's root disk. For DataSource, this must be at least as large as the source.
+        For ContainerDisk, this determines the size of the persistent volume created from the container image.
+    </p>
+    <p>
+        Use Kubernetes quantity format with suffixes like <code>Gi</code> (gibibytes) or 
+        <code>Ti</code> (tebibytes).
+    </p>
+    <p>
+        <strong>Examples:</strong> <code>30Gi</code>, <code>50Gi</code>, <code>100Gi</code>
+    </p>
+    <p>
+        <strong>Default:</strong> <code>30Gi</code>
+    </p>
+    <p>
+        <strong>Note:</strong> The disk is provisioned using a DataVolume, which imports the container
+        image or clones the DataSource into a PersistentVolumeClaim of the specified size.
+    </p>
+</div>
+

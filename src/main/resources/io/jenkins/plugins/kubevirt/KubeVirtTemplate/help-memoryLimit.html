@@ -1,0 +1,27 @@
+<div>
+    <p>
+        <strong>Memory Limit</strong> - The maximum memory the VM can use.
+    </p>
+    <p>
+        This caps the memory usage of the VM. If the VM tries to allocate more memory than 
+        this limit, processes may be terminated (OOM killed). Leave empty for no limit.
+    </p>
+    <p>
+        Use Kubernetes quantity format with suffixes like <code>Gi</code> (gibibytes) or 
+        <code>Mi</code> (mebibytes).
+    </p>
+    <p>
+        <strong>Examples:</strong> <code>4Gi</code>, <code>8Gi</code>, <code>16Gi</code>
+    </p>
+    <p>
+        <strong>Default:</strong> Empty (no limit)
+    </p>
+    <p>
+        <strong>Tip:</strong> For predictable behavior, set the memory limit equal to reserved memory.
+        This creates a "Guaranteed" QoS class in Kubernetes.
+    </p>
+    <p>
+        <strong>Note:</strong> Memory Limit must be greater than or equal to Reserved Memory.
+    </p>
+</div>
+

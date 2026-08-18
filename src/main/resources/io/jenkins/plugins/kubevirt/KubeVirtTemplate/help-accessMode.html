@@ -1,0 +1,16 @@
+<div>
+    <p>
+        The PVC access mode for the VM's root disk.
+    </p>
+    <ul>
+        <li><strong>ReadWriteMany (RWX)</strong> - The disk can be mounted by multiple nodes simultaneously.
+            This is required for live migration support. Use this if your storage backend supports RWX
+            (e.g., Ceph RBD with appropriate configuration, NFS, or OpenShift Data Foundation).</li>
+        <li><strong>ReadWriteOnce (RWO)</strong> - The disk can only be mounted by a single node at a time.
+            Use this if your storage doesn't support RWX. Live migration will not be available.</li>
+    </ul>
+    <p>
+        <strong>Default:</strong> ReadWriteMany (RWX) for live migration support.
+    </p>
+</div>
+

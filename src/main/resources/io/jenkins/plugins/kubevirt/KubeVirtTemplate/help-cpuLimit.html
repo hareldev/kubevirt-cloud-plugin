@@ -1,0 +1,31 @@
+<div>
+    <p>
+        <strong>CPU Limit</strong> - The maximum CPU the VM can use.
+    </p>
+    <p>
+        This caps the CPU usage of the VM. The VM will be throttled if it tries to use more 
+        than this amount. Leave empty for no limit (VM can burst to use all available CPU).
+    </p>
+    <p>
+        <strong>Format:</strong>
+    </p>
+    <ul>
+        <li>Integer cores: <code>1</code>, <code>2</code>, <code>4</code></li>
+        <li>Millicores: <code>500m</code>, <code>1500m</code>, <code>2000m</code></li>
+    </ul>
+    <p>
+        <strong>Examples:</strong>
+    </p>
+    <ul>
+        <li><code>2</code> = Maximum 2 CPU cores</li>
+        <li><code>1500m</code> = Maximum 1.5 CPU cores</li>
+        <li><code>4</code> = Maximum 4 CPU cores</li>
+    </ul>
+    <p>
+        <strong>Default:</strong> Empty (no limit)
+    </p>
+    <p>
+        <strong>Note:</strong> CPU Limit must be greater than or equal to Reserved CPU.
+    </p>
+</div>
+

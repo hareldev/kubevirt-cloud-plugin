@@ -1,0 +1,37 @@
+<div>
+    <p>
+        The number of minutes a VM must exist without a registered Jenkins agent before
+        being considered orphaned and automatically deleted.
+    </p>
+    <p>
+        <strong>Purpose:</strong>
+    </p>
+    <p>
+        A background cleanup job runs periodically to detect orphaned VMs - VMs that exist
+        in Kubernetes but have no corresponding registered agent in Jenkins. This can happen when:
+    </p>
+    <ul>
+        <li>Agent registration failed after VM creation</li>
+        <li>Jenkins crashed or restarted during provisioning</li>
+        <li>Network issues prevented proper cleanup</li>
+        <li>The agent termination callback failed to delete the VM</li>
+    </ul>
+    <p>
+        The grace period prevents deleting VMs that are still starting up and have not yet
+        registered their agent with Jenkins.
+    </p>
+    <p>
+        <strong>Recommendations:</strong>
+    </p>
+    <ul>
+        <li>Use <code>30</code> (default) for most environments.</li>
+        <li>Increase if your VMs take longer to boot and register (e.g., large disk clones, slow cloud-init).</li>
+        <li>Decrease if you want faster cleanup of orphaned VMs, but ensure it's longer than your typical VM startup time.</li>
+    </ul>
+    <p>
+        <strong>Examples:</strong> <code>15</code>, <code>30</code>, <code>60</code>, <code>120</code>
+    </p>
+    <p>
+        <strong>Default:</strong> <code>30</code>
+    </p>
+</div>

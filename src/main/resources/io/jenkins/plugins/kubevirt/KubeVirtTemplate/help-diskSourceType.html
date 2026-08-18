@@ -1,0 +1,42 @@
+<div>
+    <p>
+        Choose how the VM's boot disk is provided:
+    </p>
+    <ul>
+        <li>
+            <strong>ContainerDisk:</strong> Uses a container image as the disk source.
+            The image is imported directly from the registry into a DataVolume for each VM.
+            Simple to configure (only requires an image URL) but downloads the image every time a VM is provisioned.
+        </li>
+        <li>
+            <strong>DataSource (Clone):</strong> Clones a disk from an existing DataSource
+            (typically a golden image that already exists in the cluster).
+            Requires specifying the DataSource namespace and name. Fast provisioning since the image
+            is already available locally, but the DataSource must be created and managed externally.
+        </li>
+        <li>
+            <strong>DataSource (Import):</strong> Imports a container image into a DataSource on first use,
+            then clones from it for subsequent VMs. Combines the convenience of ContainerDisk
+            (just provide an image URL) with the speed of DataSource cloning. The first VM takes
+            longer to provision (image import), but all following VMs are fast (local clone).
+            Requires specifying the DataSource namespace, name, and the image URL to import.
+            <p>
+                <strong>⚠️ Note:</strong> This option creates persistent resources in your cluster that are
+                <strong>not automatically deleted</strong> when the Jenkins template is removed:
+            </p>
+            <ul>
+                <li>A <strong>DataVolume</strong> (<code>&lt;name&gt;-import</code>) and its backing
+                    <strong>PVC</strong> in the configured DataSource namespace, which store the imported
+                    disk image and consume cluster storage.</li>
+                <li>A <strong>DataSource</strong> (<code>&lt;name&gt;</code>) that references the PVC.</li>
+            </ul>
+            <p>
+                To reclaim storage when these resources are no longer needed, delete them manually:
+            </p>
+            <pre>
+kubectl delete datasource &lt;name&gt; -n &lt;namespace&gt;
+kubectl delete datavolume &lt;name&gt;-import -n &lt;namespace&gt;
+kubectl delete pvc &lt;name&gt;-import -n &lt;namespace&gt;</pre>
+        </li>
+    </ul>
+</div>

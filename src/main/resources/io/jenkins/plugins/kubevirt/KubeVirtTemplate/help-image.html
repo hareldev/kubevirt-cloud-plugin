@@ -1,0 +1,19 @@
+<div>
+    <p>
+        The container image containing the VM disk. This image should be a 
+        <a href="https://kubevirt.io/user-guide/virtual_machines/disks_and_volumes/#containerdisk" target="_blank">KubeVirt ContainerDisk</a> 
+        image with the OS disk embedded.
+    </p>
+    <p>
+        <strong>Examples:</strong>
+    </p>
+    <ul>
+        <li><code>quay.io/containerdisks/fedora:40</code></li>
+        <li><code>quay.io/containerdisks/centos-stream:9</code></li>
+        <li><code>registry.example.com/my-custom-image:latest</code></li>
+    </ul>
+    <p>
+        <strong>Note:</strong> The image must have cloud-init installed for SSH key injection to work.
+    </p>
+</div>
+
