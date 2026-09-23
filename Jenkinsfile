@@ -1,18 +1,8 @@
-pipeline {
-    agent {
-        label 'maven'
-    }
-    stages {
-        stage('Build') {
-            steps {
-                sh 'mvn clean install -DskipTests'
-            }
-        }
-        stage('Test') {
-            steps {
-                sh 'mvn test'
-            }
-        }
-    }
-}
-
+buildPlugin(
+  forkCount: '1C',
+  useContainerAgent: true,
+  configurations: [
+    [platform: 'linux', jdk: 21],
+    [platform: 'windows', jdk: 21],
+  ]
+)
