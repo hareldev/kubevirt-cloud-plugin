@@ -724,6 +724,7 @@ public class KubeVirtCloud extends Cloud implements VMTemplateGroup {
             return "KubeVirt / OpenShift Virtualization";
         }
 
+        @SuppressWarnings("lgtm[jenkins/csrf]")
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup<?> context) {
             if (context == null) {
                 context = Jenkins.get();
@@ -754,7 +755,11 @@ public class KubeVirtCloud extends Cloud implements VMTemplateGroup {
         /**
          * Validates the VM count cap field.
          */
+        @POST
         public FormValidation doCheckVmCountCap(@QueryParameter String value) {
+            if (!KubeVirtStaplerSecurity.canManage()) {
+                return FormValidation.ok();
+            }
             if (value == null || value.trim().isEmpty()) {
                 return FormValidation.ok("Will use default: " + KubeVirtConfiguration.DEFAULT_GLOBAL_INSTANCE_CAP);
             }
@@ -772,11 +777,16 @@ public class KubeVirtCloud extends Cloud implements VMTemplateGroup {
             }
         }
 
+        @POST
         public FormValidation doTestConnection(
                 @QueryParameter String serverUrl,
                 @QueryParameter String credentialsId,
                 @QueryParameter String namespace,
                 @QueryParameter boolean ignoreSsl) {
+
+            if (!KubeVirtStaplerSecurity.canManage()) {
+                return FormValidation.ok();
+            }
 
             // Validate required fields
             if (serverUrl == null || serverUrl.trim().isEmpty()) {

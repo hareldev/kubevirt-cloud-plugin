@@ -74,6 +74,12 @@ public class VirtctlPortForwardLauncher extends ComputerLauncher {
     private static final Logger LOGGER = Logger.getLogger(VirtctlPortForwardLauncher.class.getName());
 
     private final String serverUrl;
+    /**
+     * Kubernetes API token used to reopen the virtctl tunnel after reconnect.
+     * Stored on the agent launcher so restart can reconnect without re-provisioning.
+     * Replacing this with a credentials lookup would change persisted agent XML.
+     */
+    @SuppressWarnings("lgtm[jenkins/plaintext-storage]")
     private final String token;
     private final String namespace;
     private final boolean ignoreSsl;

@@ -90,6 +90,8 @@ public class KubeVirtWebSocketTunnel implements Closeable {
     private final ExecutorService executor;
     private final HttpClient httpClient;
     private final String wsUrl;
+    /** Runtime Kubernetes API token; this class is not persisted as Jenkins configuration. */
+    @SuppressWarnings("lgtm[jenkins/plaintext-storage]")
     private final String token;
     private final AtomicBoolean running = new AtomicBoolean(true);
 
@@ -514,7 +516,8 @@ public class KubeVirtWebSocketTunnel implements Closeable {
         if (ignoreSsl) {
             try {
                 SSLContext sslContext = SSLContext.getInstance("TLS");
-                sslContext.init(null, new TrustManager[]{new TrustAllCertsManager()}, null);
+                // TLS verification is skipped only when an administrator enabled ignoreSsl on the cloud.
+                sslContext.init(null, new TrustManager[]{new TrustAllCertsManager()}, null); // lgtm[jenkins/unsafe-calls]
                 builder.sslContext(sslContext);
             } catch (NoSuchAlgorithmException | KeyManagementException e) {
                 throw new IOException("Failed to create permissive SSL context", e);
