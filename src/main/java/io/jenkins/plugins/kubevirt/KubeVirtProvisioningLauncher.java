@@ -168,7 +168,7 @@ public class KubeVirtProvisioningLauncher extends ComputerLauncher {
             validateSshCredentials(template, nodeName, callback);
 
             // Phase 4: Create real launcher and delegate
-            delegate = launcherFactory.createLauncher(template, nodeName, ip, virt, config, callback);
+            delegate = launcherFactory.createLauncher(template, nodeName, ip, config, callback);
 
             // Log retention policy
             logRetentionPolicy(template, callback);

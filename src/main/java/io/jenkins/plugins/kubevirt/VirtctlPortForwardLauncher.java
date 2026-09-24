@@ -27,6 +27,7 @@ package io.jenkins.plugins.kubevirt;
 import hudson.model.TaskListener;
 import hudson.plugins.sshslaves.SSHLauncher;
 import hudson.plugins.sshslaves.verifiers.NonVerifyingKeyVerificationStrategy;
+import hudson.slaves.Cloud;
 import hudson.slaves.ComputerLauncher;
 import hudson.slaves.SlaveComputer;
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
@@ -36,6 +37,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
+import jenkins.model.Jenkins;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -75,12 +77,11 @@ public class VirtctlPortForwardLauncher extends ComputerLauncher {
 
     private final String serverUrl;
     /**
-     * Kubernetes API token used to reopen the virtctl tunnel after reconnect.
-     * Stored on the agent launcher so restart can reconnect without re-provisioning.
-     * Replacing this with a credentials lookup would change persisted agent XML.
+     * Name of the Jenkins cloud that owns this launcher.
+     * Used to look up the Kubernetes API token at runtime from the Jenkins
+     * credential store, so no secret is persisted to the agent XML on disk.
      */
-    @SuppressWarnings("lgtm[jenkins/plaintext-storage]")
-    private final String token;
+    private final String cloudName;
     private final String namespace;
     private final boolean ignoreSsl;
     private final String vmName;
@@ -96,12 +97,12 @@ public class VirtctlPortForwardLauncher extends ComputerLauncher {
     private transient KubernetesClient client;
     private transient SSHLauncher delegateLauncher;
 
-    public VirtctlPortForwardLauncher(String serverUrl, String token, String namespace,
+    public VirtctlPortForwardLauncher(String serverUrl, String cloudName, String namespace,
                                        boolean ignoreSsl, String vmName,
                                        String sshCredentialsId, String javaPath, String remoteFS,
                                        int cloudInitWaitSeconds) {
         this.serverUrl = serverUrl;
-        this.token = token;
+        this.cloudName = cloudName;
         this.namespace = namespace;
         this.ignoreSsl = ignoreSsl;
         this.vmName = vmName;
@@ -121,10 +122,75 @@ public class VirtctlPortForwardLauncher extends ComputerLauncher {
                 : KubeVirtConfiguration.DEFAULT_CLOUD_INIT_WAIT_SECONDS;
     }
 
+    /**
+     * Returns the effective cloud name, falling back to the owning
+     * {@link KubeVirtAgent}'s cloud name when the launcher was deserialized
+     * from an older plugin version that persisted a {@code token} field
+     * instead of {@code cloudName}.
+     *
+     * @param computer The computer being launched (used for fallback lookup)
+     * @return The cloud name, or {@code null} if it could not be determined
+     */
+    private String effectiveCloudName(SlaveComputer computer) {
+        if (cloudName != null) {
+            return cloudName;
+        }
+        // Upgrade path: old XML has <token> but no <cloudName>.
+        // Fall back to the cloud name persisted on the KubeVirtAgent node.
+        if (computer != null && computer.getNode() instanceof KubeVirtAgent) {
+            String agentCloudName = ((KubeVirtAgent) computer.getNode()).getCloudName();
+            LOGGER.log(Level.INFO, "Launcher for VM {0} has no cloudName (upgraded from older plugin version), "
+                    + "falling back to agent cloud name: {1}", new Object[]{vmName, agentCloudName});
+            return agentCloudName;
+        }
+        return null;
+    }
+
+    /**
+     * Resolves the Kubernetes API token at runtime by looking up the cloud
+     * configuration and its associated credentials from the Jenkins credential store.
+     *
+     * @param effectiveCloudName The cloud name to look up
+     * @return The Kubernetes API OAuth token
+     * @throws IOException if the cloud or credentials cannot be found
+     */
+    private String resolveToken(String effectiveCloudName) throws IOException {
+        if (effectiveCloudName == null) {
+            throw new IOException("Cannot resolve Kubernetes token: cloud name is unknown. "
+                    + "The launcher for VM '" + vmName + "' may have been deserialized from an "
+                    + "incompatible plugin version.");
+        }
+        Cloud cloud = Jenkins.get().getCloud(effectiveCloudName);
+        if (!(cloud instanceof KubeVirtCloud)) {
+            throw new IOException("KubeVirt cloud '" + effectiveCloudName
+                    + "' not found. It may have been deleted or renamed.");
+        }
+        KubeVirtCloud kubeVirtCloud = (KubeVirtCloud) cloud;
+        String credentialsId = kubeVirtCloud.getCredentialsId();
+        try {
+            return new KubeVirtClientFactory().lookupToken(credentialsId);
+        } catch (IllegalStateException e) {
+            throw new IOException("Failed to resolve Kubernetes token for cloud '"
+                    + effectiveCloudName + "': " + e.getMessage(), e);
+        }
+    }
+
     @Override
     public void launch(SlaveComputer computer, TaskListener listener) throws IOException, InterruptedException {
         PrintStream log = listener.getLogger();
         KubeVirtLog.log(log, "Starting WebSocket tunnel for VM: " + vmName);
+
+        // Resolve the token at runtime from the Jenkins credential store
+        // so that no secret is persisted in the agent XML on disk.
+        String token;
+        try {
+            token = resolveToken(effectiveCloudName(computer));
+        } catch (IOException e) {
+            KubeVirtLog.error(listener, "ERROR: Failed to resolve Kubernetes token: "
+                    + KubeVirtLog.messageOf(e));
+            LOGGER.log(Level.SEVERE, "Failed to resolve Kubernetes token for VM " + vmName, e);
+            throw e;
+        }
 
         if (token == null || token.isEmpty()) {
             KubeVirtLog.error(listener, "ERROR: Kubernetes token is null or empty! Tunnel will fail.");
