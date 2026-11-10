@@ -54,24 +54,22 @@ THE SOFTWARE.
             Reserved must be less than or equal to Limits.
         </f:description>
         <div class="resource-grid">
-            <div class="resource-column">
-                <h4>Reserved (Requests)</h4>
+            <l:card title="Reserved (Requests)">
                 <f:entry title="CPU" field="cpu">
                     <f:textbox default="${descriptor.defaultCpu}" />
                 </f:entry>
                 <f:entry title="Memory" field="memory">
                     <f:textbox default="${descriptor.defaultMemory}" />
                 </f:entry>
-            </div>
-            <div class="resource-column">
-                <h4>Limits (Maximum)</h4>
+            </l:card>
+            <l:card title="Limits (Maximum)">
                 <f:entry title="CPU Limit" field="cpuLimit">
                     <f:textbox />
                 </f:entry>
                 <f:entry title="Memory Limit" field="memoryLimit">
                     <f:textbox />
                 </f:entry>
-            </div>
+            </l:card>
         </div>
     </f:section>
     

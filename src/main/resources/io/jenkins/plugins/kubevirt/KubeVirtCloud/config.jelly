@@ -28,7 +28,13 @@ THE SOFTWARE.
 -->
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
     <f:entry title="${%Cloud Name}" field="name">
-        <f:textbox />
+        <f:readOnlyTextbox value="${instance.name}" />
+    </f:entry>
+    <f:invisibleEntry>
+        <input type="hidden" name="_.name" value="${instance.name}"/>
+    </f:invisibleEntry>
+    <f:entry title="${%Display Name}" field="displayName">
+        <f:textbox name="_.displayName" value="${instance.displayNameOrNull}"/>
     </f:entry>
     <f:entry title="${%Kubernetes Server URL}" field="serverUrl">
         <f:textbox />
