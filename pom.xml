@@ -36,7 +36,6 @@
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <jenkins.baseline>2.555</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
-    <jenkins.bom.version>7280.ve2096dda_41b_9</jenkins.bom.version>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
     <banObsoleteDependencyOverrides.skip>false</banObsoleteDependencyOverrides.skip>
     <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
@@ -50,7 +49,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>${jenkins.bom.version}</version>
+        <version>7312.v55b_41644b_77d</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
