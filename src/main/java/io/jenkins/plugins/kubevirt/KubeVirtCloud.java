@@ -29,7 +29,9 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.model.ItemGroup;
 import hudson.model.Node;
@@ -70,6 +72,7 @@ import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.verb.POST;
 import org.jenkinsci.plugins.cloudstats.ProvisioningActivity;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 /**
@@ -85,7 +88,13 @@ public class KubeVirtCloud extends Cloud implements VMTemplateGroup {
     private final boolean ignoreSsl;
     private final Integer vmCountCap;
     private final boolean enableOrphanCleanup;
-    
+
+    /**
+     * Optional label for the Jenkins cloud overview (since 2.585); immutable {@link #name} remains the unique id.
+     */
+    @CheckForNull
+    private String displayName;
+
     @NonNull
     private List<KubeVirtTemplate> templates = new ArrayList<>();
 
@@ -109,6 +118,27 @@ public class KubeVirtCloud extends Cloud implements VMTemplateGroup {
         this.vmCountCap = parseVmCountCap(vmCountCap);
         this.enableOrphanCleanup = enableOrphanCleanup;
         setTemplates(templates);
+    }
+
+    @DataBoundSetter
+    public void setDisplayName(String displayName) {
+        this.displayName = Util.fixEmptyAndTrim(displayName);
+    }
+
+    /**
+     * Stored display label for the configure form (without fallback to {@link #name}).
+     */
+    @CheckForNull
+    public String getDisplayNameOrNull() {
+        return displayName;
+    }
+
+    @Override
+    public String getDisplayName() {
+        if (displayName != null && !displayName.isBlank()) {
+            return displayName;
+        }
+        return name;
     }
 
     /**

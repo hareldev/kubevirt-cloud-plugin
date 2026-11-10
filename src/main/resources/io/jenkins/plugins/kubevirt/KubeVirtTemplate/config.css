@@ -3,17 +3,5 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
-}
-
-.resource-column {
-    padding: 10px;
-    background-color: var(--card-background);
-    border-radius: 4px;
     margin-bottom: var(--section-padding);
-}
-
-.resource-column h4 {
-    margin: 0 0 10px 0;
-    color: var(--text-color-secondary);
-    font-size: 13px;
 }
