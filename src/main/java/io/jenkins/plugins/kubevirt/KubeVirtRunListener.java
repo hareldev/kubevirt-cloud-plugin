@@ -42,7 +42,7 @@ import java.util.logging.Logger;
  * {@link hudson.slaves.CloudRetentionStrategy} on {@link KubeVirtAgent}, not by this listener.</p>
  *
  * <p>Pipeline jobs ({@code node('label') { ... }}) do not run on {@link AbstractBuild}; their controller-side
- * {@link Run} has no executor on the KubeVirt agent, so this listener intentionally does not apply to them.</p>
+ * {@link hudson.model.Run} has no executor on the KubeVirt agent, so this listener intentionally does not apply to them.</p>
  */
 @Extension
 public class KubeVirtRunListener extends RunListener<AbstractBuild<?, ?>> {
