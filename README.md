@@ -1,9 +1,12 @@
 # KubeVirt Cloud Plugin for Jenkins
 
-[![Jenkins Plugin](https://img.shields.io/badge/Jenkins-Plugin-blue.svg)](https://plugins.jenkins.io/)
+[![kubevirt-cloud version](https://img.shields.io/jenkins/plugin/v/kubevirt-cloud.svg?label=kubevirt-cloud)](https://plugins.jenkins.io/kubevirt-cloud)
+[![kubevirt-cloud installs](https://img.shields.io/jenkins/plugin/i/kubevirt-cloud.svg)](https://plugins.jenkins.io/kubevirt-cloud)
 [![License](https://img.shields.io/github/license/jenkinsci/kubevirt-cloud-plugin)](LICENSE)
 
 Jenkins plugin to run dynamic agents as Virtual Machines in Kubernetes clusters running [KubeVirt](https://kubevirt.io/).
+
+Release history is in [GitHub Releases](https://github.com/jenkinsci/kubevirt-cloud-plugin/releases) and [CHANGELOG.md](CHANGELOG.md).
 
 The plugin creates a KubeVirt VirtualMachine for each agent started, and deletes it after the build completes or after an idle timeout.
 
