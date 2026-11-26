@@ -253,6 +253,7 @@ public class KubeVirtProvisioningLauncher extends ComputerLauncher {
                 template.getName(),
                 template.getDiskSize(),
                 template.getAccessMode(),
+                template.getStorageClass(),
                 template.getCpu(),
                 template.getMemory(),
                 template.getCpuLimit(),

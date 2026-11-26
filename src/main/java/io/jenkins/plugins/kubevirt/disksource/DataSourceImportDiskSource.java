@@ -66,6 +66,7 @@ public class DataSourceImportDiskSource extends KubeVirtDiskSource {
                 image,
                 context.getDiskSize(),
                 context.getAccessMode(),
+                context.getStorageClass(),
                 context.getCpu(),
                 context.getMemory(),
                 context.getCpuLimit(),

@@ -57,6 +57,7 @@ public class DataSourceCloneDiskSource extends KubeVirtDiskSource {
                 dataSourceName,
                 context.getDiskSize(),
                 context.getAccessMode(),
+                context.getStorageClass(),
                 context.getCpu(),
                 context.getMemory(),
                 context.getCpuLimit(),

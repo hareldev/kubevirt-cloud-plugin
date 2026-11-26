@@ -24,6 +24,9 @@
 
 package io.jenkins.plugins.kubevirt.internal;
 
+import io.jenkins.plugins.kubevirt.ProvisioningCallback;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,6 +34,55 @@ import static org.junit.jupiter.api.Assertions.*;
  * Unit tests for KubeVirt class.
  */
 public class KubeVirtTest {
+
+    @Test
+    public void testBuildStorageWithStorageClass() {
+        Map<String, Object> storage = KubeVirt.buildStorage(
+                "40Gi", "ReadWriteMany", " fast-storage ");
+
+        assertEquals(List.of("ReadWriteMany"), storage.get("accessModes"));
+        assertEquals("fast-storage", storage.get("storageClassName"));
+        assertEquals("40Gi", storageRequest(storage));
+    }
+
+    @Test
+    public void testBuildStorageWithoutStorageClass() {
+        Map<String, Object> storage = KubeVirt.buildStorage("30Gi", null, " ");
+
+        assertEquals(List.of("ReadWriteMany"), storage.get("accessModes"));
+        assertFalse(storage.containsKey("storageClassName"));
+        assertEquals("30Gi", storageRequest(storage));
+    }
+
+    @Test
+    public void testLegacyProvisioningMethodSignaturesRemainAvailable() {
+        assertDoesNotThrow(() -> KubeVirt.class.getMethod(
+                "createDataSource",
+                String.class, String.class, String.class, String.class, String.class,
+                ProvisioningCallback.class));
+        assertDoesNotThrow(() -> KubeVirt.class.getMethod(
+                "createVM",
+                String.class, String.class, String.class, String.class, String.class, String.class,
+                String.class, String.class, String.class, String.class, String.class,
+                boolean.class, ProvisioningCallback.class));
+        assertDoesNotThrow(() -> KubeVirt.class.getMethod(
+                "createVMFromDataSource",
+                String.class, String.class, String.class, String.class, String.class, String.class,
+                String.class, String.class, String.class, String.class, String.class, String.class,
+                boolean.class, ProvisioningCallback.class));
+        assertDoesNotThrow(() -> KubeVirt.class.getMethod(
+                "createVMFromDataSourceImport",
+                String.class, String.class, String.class, String.class, String.class, String.class,
+                String.class, String.class, String.class, String.class, String.class, String.class,
+                String.class, boolean.class, ProvisioningCallback.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String storageRequest(Map<String, Object> storage) {
+        Map<String, Object> resources = (Map<String, Object>) storage.get("resources");
+        Map<String, Object> requests = (Map<String, Object>) resources.get("requests");
+        return (String) requests.get("storage");
+    }
 
     /**
      * Tests the sanitizeLabelValue method which is critical for security.

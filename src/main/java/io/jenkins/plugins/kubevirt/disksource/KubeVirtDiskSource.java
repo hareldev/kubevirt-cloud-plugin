@@ -84,6 +84,7 @@ public abstract class KubeVirtDiskSource extends AbstractDescribableImpl<KubeVir
         /** Kubernetes PVC access mode (ReadWriteOnce / ReadWriteMany), not a credential. */
         @SuppressWarnings("lgtm[jenkins/plaintext-storage]")
         private final String accessMode;
+        private final String storageClass;
         private final String cpu;
         private final String memory;
         private final String cpuLimit;
@@ -91,6 +92,9 @@ public abstract class KubeVirtDiskSource extends AbstractDescribableImpl<KubeVir
         private final String cloudInitContent;
         private final boolean injectTmpDiskConfig;
 
+        /**
+         * Creates a provisioning context that uses the cluster's default storage class.
+         */
         public VmProvisioningContext(
                 String nodeName,
                 String cloudName,
@@ -103,11 +107,32 @@ public abstract class KubeVirtDiskSource extends AbstractDescribableImpl<KubeVir
                 String memoryLimit,
                 String cloudInitContent,
                 boolean injectTmpDiskConfig) {
+            this(nodeName, cloudName, templateName, diskSize, accessMode, null, cpu, memory, cpuLimit, memoryLimit,
+                    cloudInitContent, injectTmpDiskConfig);
+        }
+
+        /**
+         * Creates a provisioning context with an optional storage class.
+         */
+        public VmProvisioningContext(
+                String nodeName,
+                String cloudName,
+                String templateName,
+                String diskSize,
+                String accessMode,
+                String storageClass,
+                String cpu,
+                String memory,
+                String cpuLimit,
+                String memoryLimit,
+                String cloudInitContent,
+                boolean injectTmpDiskConfig) {
             this.nodeName = Objects.requireNonNull(nodeName);
             this.cloudName = Objects.requireNonNull(cloudName);
             this.templateName = Objects.requireNonNull(templateName);
             this.diskSize = diskSize;
             this.accessMode = accessMode;
+            this.storageClass = storageClass;
             this.cpu = cpu;
             this.memory = memory;
             this.cpuLimit = cpuLimit;
@@ -134,6 +159,11 @@ public abstract class KubeVirtDiskSource extends AbstractDescribableImpl<KubeVir
 
         public String getAccessMode() {
             return accessMode;
+        }
+
+        @CheckForNull
+        public String getStorageClass() {
+            return storageClass;
         }
 
         public String getCpu() {
