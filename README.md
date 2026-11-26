@@ -39,8 +39,8 @@ Agents connect to the Jenkins controller via SSH after the VM boots and cloud-in
 # Features
 
 * **Dynamic VM Provisioning** - Automatically create VMs when builds request agents with matching labels
-* **Multiple Disk Sources** - Support for both ContainerDisk images and DataSource cloning
-* **Flexible SSH Connectivity** - Connect via direct SSH or virtctl port-forward tunneling
+* **Multiple Disk Sources** - Support for ContainerDisk images, DataSource cloning, and DataSource import
+* **Flexible SSH Connectivity** - Connect via direct SSH or virtctl SSH (tunneled via Kubernetes API)
 * **Cloud-Init Integration** - Full support for VM initialization via cloud-init, including SSH key injection
 * **Automatic Cleanup** - VMs are deleted after builds complete or after configurable idle timeout
 * **Single-Use Agents** - Option to dispose VMs immediately after a single build
@@ -105,7 +105,7 @@ Agents connect to the Jenkins controller via SSH after the VM boots and cloud-in
 4. **Jenkins Plugins**
    - [SSH Slaves plugin](https://plugins.jenkins.io/ssh-slaves/) (ssh-slaves)
    - [Config File Provider plugin](https://plugins.jenkins.io/config-file-provider/) (config-file-provider)
-   - [Cloud Stats plugin](https://plugins.jenkins.io/cloud-stats/) (cloud-stats) - optional
+   - [Cloud Stats plugin](https://plugins.jenkins.io/cloud-stats/) (cloud-stats)
 
 # Configuration
 
@@ -367,12 +367,12 @@ Connects directly to the VM's IP address via SSH.
 
 **Best for:** Environments where VMs have routable IPs (e.g., OpenShift with SDN)
 
-## virtctl Port-Forward (SSH)
+## virtctl SSH (tunneled via Kubernetes API)
 
-Uses the Kubernetes API to create a port-forward tunnel to the VM's virt-launcher pod.
+Uses a WebSocket tunnel to the KubeVirt `virtualmachineinstances/portforward` subresource; SSH runs over that tunnel (same connection type as in the template UI).
 
 **Requirements:**
-- Service account must have `pods/portforward` permission
+- Service account must have `virtualmachineinstances/portforward` on `subresources.kubevirt.io` (included in the [RBAC example](#prerequisites))
 - No network routing needed between Jenkins and VMs
 
 **Best for:** Environments where VMs don't have routable IPs, or when Jenkins is outside the cluster
@@ -416,7 +416,7 @@ Uses the Kubernetes API to create a port-forward tunnel to the VM's virt-launche
    # For direct SSH
    ssh -i <key> <user>@<vm-ip>
    
-   # For virtctl port-forward
+   # For virtctl SSH (Kubernetes API tunnel)
    virtctl ssh -i <key> <user>@<vm-name> -n <namespace>
    ```
 
