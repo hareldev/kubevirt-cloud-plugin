@@ -1,4 +1,9 @@
 # Note: additional setup is required, see https://www.jenkins.io/redirect/continuous-delivery-of-plugins
+#
+# Releases are manual only (workflow_dispatch). To cut a release after green
+# Jenkins CI on main: Actions → cd → Run workflow.
+# Automatic release after each successful Jenkins build: uncomment check_run below
+# (see https://www.jenkins.io/doc/developer/publishing/releasing-cd/).
 ---
 name: cd
 on:
@@ -10,9 +15,9 @@ on:
         description: |
           Run validation with release drafter only; skip the release job.
         default: false
-  check_run:
-    types:
-      - completed
+  # check_run:
+  #   types:
+  #     - completed
 
 permissions:
   checks: read
