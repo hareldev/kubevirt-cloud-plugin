@@ -15,7 +15,8 @@
 
   <name>KubeVirt Cloud Plugin</name>
   <description>Dynamically provision Jenkins agents as virtual machines on KubeVirt/OpenShift Virtualization</description>
-  <url>https://github.com/${gitHubRepo}</url>
+  <!-- Explicit README path so plugins.jenkins.io embeds full documentation. -->
+  <url>https://github.com/jenkinsci/kubevirt-cloud-plugin/blob/main/README.md</url>
 
   <licenses>
     <license>
