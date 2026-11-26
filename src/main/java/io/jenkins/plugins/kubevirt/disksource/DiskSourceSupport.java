@@ -16,6 +16,9 @@ final class DiskSourceSupport {
 
     static String resourceLog(KubeVirtDiskSource.VmProvisioningContext context) {
         StringBuilder sb = new StringBuilder();
+        if (context.getStorageClass() != null) {
+            sb.append(", Storage class: ").append(context.getStorageClass());
+        }
         sb.append(", CPU: ").append(context.getCpu());
         if (context.getCpuLimit() != null && !context.getCpuLimit().isEmpty()) {
             sb.append(" (limit: ").append(context.getCpuLimit()).append(")");

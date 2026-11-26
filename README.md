@@ -300,6 +300,11 @@ pipeline {
 | **DataSource Name** | Name of the DataSource to clone (Clone) or to create (Import) | Required for DataSource |
 | **Disk Size** | Size of the root disk (e.g., `30Gi`) | `30Gi` |
 | **Access Mode** | PVC access mode for the disk | ReadWriteMany (RWX) |
+| **Storage Class** | Kubernetes StorageClass used for VM disks | Cluster default |
+
+Leave **Storage Class** empty to preserve the existing behavior and use the cluster's default storage class. When set,
+the plugin applies it as `storageClassName` to DataVolumes created for ContainerDisk, DataSource clone, and DataSource
+import workflows. The same setting is available through Jenkins Configuration as Code as `storageClass`.
 
 ### Disk Source Types
 

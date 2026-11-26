@@ -209,9 +209,25 @@ public class KubeVirt implements AutoCloseable {
      * @param accessMode          PVC access mode (e.g., "ReadWriteOnce" or "ReadWriteMany")
      * @param callback            Callback for progress reporting
      */
-    @SuppressFBWarnings("REC_CATCH_EXCEPTION")
     public void createDataSource(String dataSourceNamespace, String dataSourceName, String imageUrl,
             String diskSize, String accessMode, ProvisioningCallback callback) {
+        createDataSource(dataSourceNamespace, dataSourceName, imageUrl, diskSize, accessMode, null, callback);
+    }
+
+    /**
+     * Creates a DataSource from a registry image using an optional Kubernetes storage class.
+     *
+     * @param dataSourceNamespace namespace where the DataSource is created
+     * @param dataSourceName DataSource name
+     * @param imageUrl container image URL
+     * @param diskSize requested disk size
+     * @param accessMode PVC access mode
+     * @param storageClass Kubernetes storage class, or {@code null} to use the cluster default
+     * @param callback callback for progress reporting
+     */
+    @SuppressFBWarnings("REC_CATCH_EXCEPTION")
+    public void createDataSource(String dataSourceNamespace, String dataSourceName, String imageUrl,
+            String diskSize, String accessMode, String storageClass, ProvisioningCallback callback) {
         callback.log("Creating DataSource: " + dataSourceName + " in namespace: " + dataSourceNamespace);
         callback.log("Source image: " + imageUrl);
         LOGGER.log(Level.FINE, "Creating DataSource {0} in namespace {1} from image {2}",
@@ -234,14 +250,7 @@ public class KubeVirt implements AutoCloseable {
         dvSource.put("registry", registry);
         dvSpec.put("source", dvSource);
 
-        Map<String, Object> storage = new LinkedHashMap<>();
-        storage.put("accessModes", List.of(accessMode != null ? accessMode : "ReadWriteMany"));
-        Map<String, Object> storageResources = new LinkedHashMap<>();
-        Map<String, Object> storageRequests = new LinkedHashMap<>();
-        storageRequests.put("storage", diskSize);
-        storageResources.put("requests", storageRequests);
-        storage.put("resources", storageResources);
-        dvSpec.put("storage", storage);
+        dvSpec.put("storage", buildStorage(diskSize, accessMode, storageClass));
 
         GenericKubernetesResource dv = new GenericKubernetesResourceBuilder()
                 .withApiVersion(KubeVirtConfiguration.CDI_API_GROUP + "/" + KubeVirtConfiguration.CDI_API_VERSION)
@@ -462,6 +471,32 @@ public class KubeVirt implements AutoCloseable {
     public void createVM(String name, String cloudName, String templateName, String image, String diskSize, String accessMode, 
                          String cpu, String memory, String cpuLimit, String memoryLimit,
                          String userData, boolean injectTmpDiskConfig, ProvisioningCallback callback) {
+        createVM(name, cloudName, templateName, image, diskSize, accessMode, null,
+                cpu, memory, cpuLimit, memoryLimit, userData, injectTmpDiskConfig, callback);
+    }
+
+    /**
+     * Creates a KubeVirt VirtualMachine from a registry image using an optional storage class.
+     *
+     * @param name VM name
+     * @param cloudName cloud name used for labeling
+     * @param templateName template name used for labeling
+     * @param image container disk image
+     * @param diskSize requested disk size
+     * @param accessMode PVC access mode
+     * @param storageClass Kubernetes storage class, or {@code null} to use the cluster default
+     * @param cpu CPU request
+     * @param memory memory request
+     * @param cpuLimit CPU limit, or {@code null}
+     * @param memoryLimit memory limit, or {@code null}
+     * @param userData cloud-init user data
+     * @param injectTmpDiskConfig whether to inject the ephemeral /tmp disk configuration
+     * @param callback callback for progress reporting
+     */
+    public void createVM(String name, String cloudName, String templateName, String image, String diskSize,
+                         String accessMode, String storageClass,
+                         String cpu, String memory, String cpuLimit, String memoryLimit,
+                         String userData, boolean injectTmpDiskConfig, ProvisioningCallback callback) {
         callback.log("Initializing VM creation with ContainerDisk...");
         if (injectTmpDiskConfig) {
             callback.log("Ephemeral /tmp disk injection enabled");
@@ -483,14 +518,7 @@ public class KubeVirt implements AutoCloseable {
         source.put("registry", Map.of("url", "docker://" + image));
         dvSpec.put("source", source);
 
-        Map<String, Object> storage = new HashMap<>();
-        storage.put("accessModes", List.of(accessMode != null ? accessMode : "ReadWriteMany"));
-        Map<String, Object> storageResources = new HashMap<>();
-        Map<String, Object> storageRequests = new HashMap<>();
-        storageRequests.put("storage", diskSize);
-        storageResources.put("requests", storageRequests);
-        storage.put("resources", storageResources);
-        dvSpec.put("storage", storage);
+        dvSpec.put("storage", buildStorage(diskSize, accessMode, storageClass));
 
         dataVolumeTemplate.put("spec", dvSpec);
         spec.put("dataVolumeTemplates", List.of(dataVolumeTemplate));
@@ -527,6 +555,35 @@ public class KubeVirt implements AutoCloseable {
                                        String diskSize, String accessMode, 
                                        String cpu, String memory, String cpuLimit, String memoryLimit,
                                        String userData, boolean injectTmpDiskConfig, ProvisioningCallback callback) {
+        createVMFromDataSource(name, cloudName, templateName, dataSourceNamespace, dataSourceName,
+                diskSize, accessMode, null, cpu, memory, cpuLimit, memoryLimit,
+                userData, injectTmpDiskConfig, callback);
+    }
+
+    /**
+     * Creates a KubeVirt VirtualMachine by cloning a DataSource using an optional storage class.
+     *
+     * @param name VM name
+     * @param cloudName cloud name used for labeling
+     * @param templateName template name used for labeling
+     * @param dataSourceNamespace namespace containing the DataSource
+     * @param dataSourceName DataSource name
+     * @param diskSize requested disk size
+     * @param accessMode PVC access mode
+     * @param storageClass Kubernetes storage class, or {@code null} to use the cluster default
+     * @param cpu CPU request
+     * @param memory memory request
+     * @param cpuLimit CPU limit, or {@code null}
+     * @param memoryLimit memory limit, or {@code null}
+     * @param userData cloud-init user data
+     * @param injectTmpDiskConfig whether to inject the ephemeral /tmp disk configuration
+     * @param callback callback for progress reporting
+     */
+    public void createVMFromDataSource(String name, String cloudName, String templateName,
+                                       String dataSourceNamespace, String dataSourceName,
+                                       String diskSize, String accessMode, String storageClass,
+                                       String cpu, String memory, String cpuLimit, String memoryLimit,
+                                       String userData, boolean injectTmpDiskConfig, ProvisioningCallback callback) {
         callback.log("Initializing VM creation from DataSource...");
         callback.log("Cloning from: " + dataSourceNamespace + "/" + dataSourceName);
         if (injectTmpDiskConfig) {
@@ -550,14 +607,7 @@ public class KubeVirt implements AutoCloseable {
         sourceRef.put("name", dataSourceName);
         dvSpec.put("sourceRef", sourceRef);
 
-        Map<String, Object> storage = new HashMap<>();
-        storage.put("accessModes", List.of(accessMode != null ? accessMode : "ReadWriteMany"));
-        Map<String, Object> storageResources = new HashMap<>();
-        Map<String, Object> storageRequests = new HashMap<>();
-        storageRequests.put("storage", diskSize);
-        storageResources.put("requests", storageRequests);
-        storage.put("resources", storageResources);
-        dvSpec.put("storage", storage);
+        dvSpec.put("storage", buildStorage(diskSize, accessMode, storageClass));
 
         dataVolumeTemplate.put("spec", dvSpec);
         spec.put("dataVolumeTemplates", List.of(dataVolumeTemplate));
@@ -599,6 +649,36 @@ public class KubeVirt implements AutoCloseable {
                                               String image, String diskSize, String accessMode,
                                               String cpu, String memory, String cpuLimit, String memoryLimit,
                                               String userData, boolean injectTmpDiskConfig, ProvisioningCallback callback) {
+        createVMFromDataSourceImport(name, cloudName, templateName, dataSourceNamespace, dataSourceName,
+                image, diskSize, accessMode, null, cpu, memory, cpuLimit, memoryLimit,
+                userData, injectTmpDiskConfig, callback);
+    }
+
+    /**
+     * Creates or reuses an imported DataSource and clones a VM from it using an optional storage class.
+     *
+     * @param name VM name
+     * @param cloudName cloud name used for labeling
+     * @param templateName template name used for labeling
+     * @param dataSourceNamespace namespace where the DataSource is created or found
+     * @param dataSourceName DataSource name
+     * @param image container disk image imported when the DataSource does not exist
+     * @param diskSize requested disk size
+     * @param accessMode PVC access mode
+     * @param storageClass Kubernetes storage class, or {@code null} to use the cluster default
+     * @param cpu CPU request
+     * @param memory memory request
+     * @param cpuLimit CPU limit, or {@code null}
+     * @param memoryLimit memory limit, or {@code null}
+     * @param userData cloud-init user data
+     * @param injectTmpDiskConfig whether to inject the ephemeral /tmp disk configuration
+     * @param callback callback for progress reporting
+     */
+    public void createVMFromDataSourceImport(String name, String cloudName, String templateName,
+                                              String dataSourceNamespace, String dataSourceName,
+                                              String image, String diskSize, String accessMode, String storageClass,
+                                              String cpu, String memory, String cpuLimit, String memoryLimit,
+                                              String userData, boolean injectTmpDiskConfig, ProvisioningCallback callback) {
         callback.log("Initializing VM creation with DataSource Import...");
         if (injectTmpDiskConfig) {
             callback.log("Ephemeral /tmp disk injection enabled");
@@ -614,7 +694,7 @@ public class KubeVirt implements AutoCloseable {
         if (!dsStatus.exists()) {
             // DataSource doesn't exist - create it
             callback.log("DataSource not found. Creating new DataSource to cache the image...");
-            createDataSource(dataSourceNamespace, dataSourceName, image, diskSize, accessMode, callback);
+            createDataSource(dataSourceNamespace, dataSourceName, image, diskSize, accessMode, storageClass, callback);
 
             // Wait for DataSource to become ready (5 minutes timeout)
             boolean ready = waitForDataSourceReady(dataSourceNamespace, dataSourceName, 300, callback);
@@ -658,14 +738,7 @@ public class KubeVirt implements AutoCloseable {
         sourceRef.put("name", dataSourceName);
         dvSpec.put("sourceRef", sourceRef);
 
-        Map<String, Object> storage = new HashMap<>();
-        storage.put("accessModes", List.of(accessMode != null ? accessMode : "ReadWriteMany"));
-        Map<String, Object> storageResources = new HashMap<>();
-        Map<String, Object> storageRequests = new HashMap<>();
-        storageRequests.put("storage", diskSize);
-        storageResources.put("requests", storageRequests);
-        storage.put("resources", storageResources);
-        dvSpec.put("storage", storage);
+        dvSpec.put("storage", buildStorage(diskSize, accessMode, storageClass));
 
         dataVolumeTemplate.put("spec", dvSpec);
         spec.put("dataVolumeTemplates", List.of(dataVolumeTemplate));
@@ -678,6 +751,28 @@ public class KubeVirt implements AutoCloseable {
         finalizeAndSubmitVM(name, cloudName, templateName, spec, rootDiskVolume,
                 userData, injectTmpDiskConfig,
                 "Submitting VM resource to cluster (cloning from cached DataSource)...", callback);
+    }
+
+    /**
+     * Builds the CDI DataVolume storage section.
+     *
+     * @param diskSize requested storage size
+     * @param accessMode PVC access mode, or {@code null} for ReadWriteMany
+     * @param storageClass Kubernetes storage class, or {@code null} to use the cluster default
+     * @return DataVolume storage configuration
+     */
+    static Map<String, Object> buildStorage(String diskSize, String accessMode, String storageClass) {
+        Map<String, Object> storage = new LinkedHashMap<>();
+        storage.put("accessModes", List.of(accessMode != null ? accessMode : "ReadWriteMany"));
+        if (storageClass != null && !storageClass.isBlank()) {
+            storage.put("storageClassName", storageClass.trim());
+        }
+        Map<String, Object> storageRequests = new LinkedHashMap<>();
+        storageRequests.put("storage", diskSize);
+        Map<String, Object> storageResources = new LinkedHashMap<>();
+        storageResources.put("requests", storageRequests);
+        storage.put("resources", storageResources);
+        return storage;
     }
 
     /**

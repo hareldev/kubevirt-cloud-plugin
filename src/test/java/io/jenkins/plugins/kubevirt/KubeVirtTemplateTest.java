@@ -47,6 +47,41 @@ public class KubeVirtTemplateTest {
         this.jenkins = jenkins;
     }
 
+    @Test
+    public void testStorageClassSetterNormalizesWhitespaceAndEmptyValues() {
+        KubeVirtTemplate template = new KubeVirtTemplate(
+                null, "test", "label1",
+                KubeVirtConfiguration.DISK_SOURCE_CONTAINER_DISK,
+                "image:latest", null, null, "30Gi",
+                KubeVirtConfiguration.ACCESS_MODE_RWX,
+                "1", "2Gi", null, null,
+                KubeVirtConfiguration.CONNECTION_DIRECT_SSH, "creds",
+                "22", "/home/jenkins", null, null, "10", null, null, null, false, null, null
+        );
+
+        template.setStorageClass(" fast-storage ");
+        assertEquals("fast-storage", template.getStorageClass());
+
+        template.setStorageClass(" ");
+        assertNull(template.getStorageClass());
+    }
+
+    @Test
+    public void testStorageClassFormValidation() {
+        KubeVirtTemplate.DescriptorImpl descriptor = new KubeVirtTemplate.DescriptorImpl();
+
+        assertEquals(FormValidation.Kind.OK, descriptor.doCheckStorageClass(null).kind);
+        assertEquals(FormValidation.Kind.OK, descriptor.doCheckStorageClass("").kind);
+        assertEquals(FormValidation.Kind.OK, descriptor.doCheckStorageClass("fast-storage").kind);
+        assertEquals(FormValidation.Kind.OK, descriptor.doCheckStorageClass("storage.example.com").kind);
+        assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckStorageClass("Fast Storage").kind);
+        assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckStorageClass("-fast-storage").kind);
+        assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckStorageClass("fast-storage-").kind);
+        assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckStorageClass("storage..example.com").kind);
+        assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckStorageClass("a".repeat(64) + ".example.com").kind);
+        assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckStorageClass("a".repeat(254)).kind);
+    }
+
     /**
      * Tests SSH port parsing with valid values.
      */

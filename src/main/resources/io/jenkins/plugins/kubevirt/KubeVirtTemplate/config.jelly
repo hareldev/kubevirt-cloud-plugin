@@ -48,6 +48,11 @@ THE SOFTWARE.
         <f:select />
     </f:entry>
 
+    <f:entry title="Storage Class" field="storageClass"
+             description="Kubernetes StorageClass used for VM disks. Leave empty to use the cluster default.">
+        <f:textbox />
+    </f:entry>
+
     <f:section title="Resources">
         <f:description>
             Configure CPU and Memory allocation. Reserved values are guaranteed to the VM, while Limits cap the maximum.

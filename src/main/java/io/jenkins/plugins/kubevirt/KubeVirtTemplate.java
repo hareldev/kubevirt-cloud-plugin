@@ -58,6 +58,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.HttpRedirect;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
@@ -91,6 +92,7 @@ public class KubeVirtTemplate implements Describable<KubeVirtTemplate>, Saveable
     /** Kubernetes PVC access mode (ReadWriteOnce / ReadWriteMany), not a credential. */
     @SuppressWarnings("lgtm[jenkins/plaintext-storage]")
     private final String accessMode;
+    private String storageClass;
     
     // Resource configuration - reserved (requests)
     private final String cpu;
@@ -382,6 +384,27 @@ public class KubeVirtTemplate implements Describable<KubeVirtTemplate>, Saveable
 
     public String getAccessMode() {
         return accessMode != null ? accessMode : KubeVirtConfiguration.ACCESS_MODE_RWX;
+    }
+
+    /**
+     * Returns the Kubernetes storage class used for VM disks, or {@code null} to use the cluster default.
+     */
+    @CheckForNull
+    public String getStorageClass() {
+        return storageClass;
+    }
+
+    /**
+     * Sets the Kubernetes storage class used for VM disks.
+     *
+     * <p>Leading and trailing whitespace is removed so UI and JCasC values are normalized consistently.
+     * An empty value preserves the existing cluster-default behavior.</p>
+     *
+     * @param storageClass Kubernetes storage class name, or an empty value to use the cluster default
+     */
+    @DataBoundSetter
+    public void setStorageClass(@CheckForNull String storageClass) {
+        this.storageClass = Util.fixEmptyAndTrim(storageClass);
     }
 
     public String getCpu() {
@@ -1037,6 +1060,37 @@ public class KubeVirtTemplate implements Describable<KubeVirtTemplate>, Saveable
                 return FormValidation.error("Invalid disk size value: " + diskSize);
             }
 
+            return FormValidation.ok();
+        }
+
+        /**
+         * Validates the optional Kubernetes StorageClass name.
+         */
+        @POST
+        public FormValidation doCheckStorageClass(@QueryParameter String value) {
+            if (!KubeVirtStaplerSecurity.canManage()) {
+                return FormValidation.ok();
+            }
+            if (value == null || value.isBlank()) {
+                return FormValidation.ok("Will use the cluster default storage class.");
+            }
+
+            String storageClass = value.trim();
+            if (storageClass.length() > 253) {
+                return FormValidation.error("Storage class name must be 253 characters or less.");
+            }
+            if (!storageClass.matches(
+                    "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$")) {
+                return FormValidation.error(
+                        "Storage class name must be a valid Kubernetes DNS subdomain "
+                                + "(lowercase alphanumeric characters, hyphens, and dots).");
+            }
+            for (String label : storageClass.split("\\.")) {
+                if (label.length() > 63) {
+                    return FormValidation.error(
+                            "Each dot-separated segment of a storage class name must be 63 characters or less.");
+                }
+            }
             return FormValidation.ok();
         }
 
